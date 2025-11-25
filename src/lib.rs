@@ -49,6 +49,8 @@
 
 pub mod audio;
 pub mod engines;
+pub mod subtitle;
+pub mod worker;
 
 pub mod remote;
 pub use remote::RemoteTranscriptionEngine;

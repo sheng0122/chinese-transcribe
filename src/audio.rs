@@ -89,3 +89,11 @@ pub fn read_wav_samples(wav_path: &Path) -> Result<Vec<f32>, Box<dyn std::error:
 
     Ok(samples?)
 }
+
+/// Get the duration of a WAV file in seconds.
+pub fn get_audio_duration(wav_path: &Path) -> Result<f64, Box<dyn std::error::Error>> {
+    let reader = hound::WavReader::open(wav_path)?;
+    let spec = reader.spec();
+    let duration = reader.duration() as f64 / spec.sample_rate as f64;
+    Ok(duration)
+}
