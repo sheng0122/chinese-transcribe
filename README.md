@@ -1,73 +1,78 @@
 # transcribe-rs
 
-A Rust library for audio transcription using the Whisper engine.
-
-This library was extracted from the [Handy](https://github.com/cjpais/handy) project to help other developers integrate transcription capabilities into their applications.
+A high-performance, parallel audio transcription tool written in Rust, powered by OpenAI's Whisper engine.
 
 ## Features
 
-- **Whisper Engine**: Support for OpenAI's Whisper model
-- **Cross-platform**: Works on macOS, Windows, and Linux with optimized backends
-- **Hardware Acceleration**: Metal on macOS, Vulkan on Windows/Linux
-- **Flexible API**: Common interface for transcription
-- **Server Implementation**: Includes a ready-to-use REST API server
+- **Parallel Transcription**: Uses a multi-process architecture to transcribe long audio files significantly faster.
+- **Process Isolation**: Ensures stability by isolating Metal (GPU) contexts in separate worker processes.
+- **Smart Chunking**: Automatically splits audio into 5-minute chunks with overlap to ensure context preservation.
+- **Cross-platform**: Optimized for Apple Silicon (Metal) on macOS.
 
-## Required Model Files
+## Prerequisites
 
-**Whisper Model:**
-- Single GGML file (e.g., `breeze-asr-25-q4_k`)
+1.  **Rust Toolchain**: Ensure you have Rust installed.
+2.  **FFmpeg**: Required for audio conversion.
+    ```bash
+    brew install ffmpeg
+    ```
 
-**Audio Requirements:**
-- Format: WAV
-- Sample Rate: 16 kHz
-- Channels: Mono (1 channel)
-- Bit Depth: 16-bit
-- Encoding: PCM
+## Installation & Build
 
-## Model Downloads
+Clone the repository and build the project in release mode for maximum performance:
 
-- **Whisper**: https://huggingface.co/ggerganov/whisper.cpp/tree/main
+```bash
+# Build both the CLI tool and the worker binary
+cargo build --release --bin cli_tool
+cargo build --release --bin worker
+```
 
 ## Usage
 
-```rust
-use transcribe_rs::{TranscriptionEngine, engines::whisper::WhisperEngine};
-use std::path::PathBuf;
-
-let mut engine = WhisperEngine::new();
-engine.load_model(&PathBuf::from("path/to/model.bin"))?;
-let result = engine.transcribe_file(&PathBuf::from("audio.wav"), None)?;
-println!("{}", result.text);
-```
-
-## Running the Example
-
-### Setup
-
-1. **Create the models directory:**
-   ```bash
-   mkdir models
-   ```
-
-2. **Download Whisper Model:**
-   ```bash
-   # Download Whisper model
-   cd models
-   wget https://blob.handy.computer/whisper-medium-q4_1.bin
-   cd ..
-   ```
-
-### Running the Example
+To transcribe an audio file, you can use the provided helper script `transcribe.sh`. It defaults to using the `models/breeze-asr-25-q4_k.bin` model.
 
 ```bash
-cargo run --example transcribe
+# Syntax
+./transcribe.sh <audio_file_path> [model_path]
+
+# Example (using default model)
+./transcribe.sh "uploads/podcast_ep1.mp3"
+
+# Example (specifying a different model)
+./transcribe.sh "uploads/podcast_ep1.mp3" "models/other_model.bin"
 ```
 
-The example will:
-- Load the Whisper model
-- Transcribe `samples/dots.wav`
-- Display timing information and transcription results
+### Batch Transcription
+
+To transcribe all audio files in a directory (supports mp3, wav, m4a), use `transcribe_folder.sh`:
+
+```bash
+# Syntax
+./transcribe_folder.sh <directory_path> [model_path]
+
+# Example
+./transcribe_folder.sh "mp3"
+```
+
+Alternatively, you can run the cargo command directly:
+```bash
+cargo run --release --bin cli_tool "uploads/podcast_ep1.mp3" "models/breeze-asr-25-q4_k.bin"
+```
+
+### Output
+The tool will generate a SubRip Subtitle (`.srt`) file in the same directory as the input audio file.
+
+## Architecture
+
+This tool uses a **Coordinator-Worker** architecture:
+- **CLI Tool (Coordinator)**: Splits audio, manages the thread pool, and aggregates results.
+- **Worker**: Independent processes that handle the actual transcription of single chunks. This design bypasses stability issues associated with multi-threaded Metal usage.
+
+## Required Model Files
+
+- **Whisper Model**: Single GGML format file (e.g., `breeze-asr-25-q4_k.bin`).
+- Download models from [Hugging Face](https://huggingface.co/ggerganov/whisper.cpp/tree/main).
 
 ## Acknowledgments
 
-- Thanks to the [whisper.cpp](https://github.com/ggerganov/whisper.cpp) project for the Whisper implementation
+- [whisper.cpp](https://github.com/ggerganov/whisper.cpp) for the core Whisper implementation.

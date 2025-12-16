@@ -29,6 +29,7 @@ uuid = { version = "1.4", features = ["v4", "serde"] }
 futures = "0.3"
 rayon = "1.8"
 async-channel = "2.3"
+tempfile = "3.10"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 whisper-rs = { version = "0.13.2", features = ["metal"] }

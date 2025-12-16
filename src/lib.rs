@@ -55,6 +55,7 @@ pub mod worker;
 pub mod remote;
 pub use remote::RemoteTranscriptionEngine;
 
+use serde::{Serialize, Deserialize};
 use std::path::Path;
 
 /// The result of a transcription operation.
@@ -73,7 +74,7 @@ pub struct TranscriptionResult {
 ///
 /// Represents a portion of the transcribed audio with start and end timestamps
 /// and the corresponding text content.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TranscriptionSegment {
     /// Start time of the segment in seconds
     pub start: f32,
